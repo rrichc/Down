@@ -53,14 +53,19 @@ extension NSMutableAttributedString {
     func addAttributes(_ attrs: DownStyle.Attributes?) {
         guard length > 0, var attrs = attrs else { return }
 
-        if
-            let newMarkdownId = attrs[.markdown] as? Markdown,
-            let existingMarkdownId = attribute(.markdown, at: 0, effectiveRange: nil) as? Markdown
-        {
-            attrs[.markdown] = newMarkdownId.union(existingMarkdownId)
+        guard let newMarkdownId = attrs[.markdown] as? Markdown else {
+            addAttributes(attrs, range: wholeRange)
+            return
         }
 
+        // Add attributes without the new markdown id.
+        attrs[.markdown] = nil
         addAttributes(attrs, range: wholeRange)
+
+        // Then add the new markdown id to all existing markdown ids separately.
+        map(overKey: .markdown, inRange: wholeRange, defaultValue: []) { (markdownId: Markdown) in
+            markdownId.union(newMarkdownId)
+        }
     }
     
     func addAttribute(_ name: NSAttributedString.Key, value: Any) {

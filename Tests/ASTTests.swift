@@ -64,6 +64,38 @@ class ASTTests: XCTestCase {
         XCTAssertEqual(style.baseFont, attrs[.font] as? UIFont)
     }
 
+    func testItPreservesAddsLinkMarkdownID_WhenLinkIsContainedInOtherMarkdown() throws {
+        // GIVEN
+        let input = "*[www.abc.com](www.efg.com)*"
+        let down = Down(markdownString: input)
+
+        // WHEN
+        let result = try down.toAttributedString(using: style)
+
+        // THEN
+        let linkRanges = result.ranges(containing: .link)
+        XCTAssertEqual(linkRanges.count, 1)
+
+        guard let linkRange = linkRanges.first else { return XCTFail() }
+        XCTAssertEqual(linkRange, NSRange(location: 0, length: 11))
+    }
+
+    func testItPreservesLinkMarkdownID_WhenLinkIsContainedInOtherMarkdownWithOtherText() throws {
+        // GIVEN
+        let input = "*#[www.abc.com](www.efg.com)*"
+        let down = Down(markdownString: input)
+
+        // WHEN
+        let result = try down.toAttributedString(using: style)
+
+        // THEN
+        let linkRanges = result.ranges(containing: .link)
+        XCTAssertEqual(linkRanges.count, 1)
+
+        guard let linkRange = linkRanges.first else { return XCTFail() }
+        XCTAssertEqual(linkRange, NSRange(location: 1, length: 11))
+    }
+
     func testThatItParsesEmptyQuoteAsEmptyString() {
         // GIVEN
         let input = ">"
